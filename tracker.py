@@ -1,78 +1,42 @@
 import requests
 from bs4 import BeautifulSoup
-import json
-import time
+import re
 
-CONFIG_FILE = "config.json"
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/114.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "it-IT,it;q=0.9"
-}
+#Devo mettere un for iniziale che cicla per ogni riga di un txt, che sarà il txt in cui metto i link che voglio tracciare. Prima devo riuscire ad accedere al nome dell'oggetto + il prezzo, e poi man mano li appendo in un file di testo
+PRINT_DEBUG = False
 
-def load_config(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"⚠️ Errore nel caricamento del file di configurazione: {e}")
-        return None
+#Parte iniziale dove scrivo gli oggetti/prezzi nuovi
+new_prices = open('new_prices.txt', 'w', encoding='utf-8', newline='')
 
-def get_price(product_url):
-    try:
-        response = requests.get(product_url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(response.content, "html.parser")
 
-        # Prova più selettori per maggiore compatibilità
-        price_tag = (
-            soup.select_one("#priceblock_ourprice") or
-            soup.select_one("#priceblock_dealprice") or
-            soup.select_one("#corePriceDisplay_desktop_feature_div span.a-offscreen")
-        )
+URL = "https://www.amazon.it/PROIRON-Giubbotto-regolabile-riflettente-allenamento/dp/B09QXGQNFC/ref=sr_1_2_sspa?__mk_it_IT=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=1TQAX9YAKVNMI&dib=eyJ2IjoiMSJ9.rdynVfwpfPyhcWfQVn9j2Z9eJcoQ4wmK7S4hMSYUu9BsRSuhM_zc8D2M-6hGBXtDUJ-MRVH-KiKrSDxGU-mYQYdc3LrSPkcjteEMRvGr6LMmuo9BQbvFug9n4as80cDwaWvrnqWmn_vVYHlYA_cPbI5KeaLtfkC269rBEq9VY9loz1EAwcE6fK2v71mp1AXUuKOKe73C4PQ4XHwyG1WK4jZFJc51AEGIu_QACRojgu79mjRQg7Ftp67L_1vc7vtiKrXtiQm8FNDNuNIm7ROBlvKeVV7hc0JzEaBwsdPqJCo.GKjzqdThssrrq1LxO_2lk5c24Vk4kMXcA89CqP03S5g&dib_tag=se&keywords=ceste%2Bpesi&qid=1754512565&sprefix=vest%2Bpesi%2Caps%2C159&sr=8-2-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&th=1"
+page = requests.get(URL)
 
-        if price_tag:
-            price_text = price_tag.text.strip().replace("€", "").replace(",", ".")
-            return float(price_text)
-        else:
-            print("❌ Prezzo non trovato nella pagina.")
-            return None
+soup = BeautifulSoup(page.content, "html.parser")
 
-    except Exception as e:
-        print(f"⚠️ Errore durante il recupero del prezzo: {e}")
-        return None
+results = soup.find(id="content") #Funziona, ottengo la parte delle pizze
+#f = open("tmp.txt", 'w', encoding='utf-8')
 
-def main():
-    config = load_config(CONFIG_FILE)
-    if not config:
-        return
+#Parte per scrivere HTML in file, funzionante:
+#f = open("tmp.html", 'w', encoding='utf-8')
+#x = soup.prettify()
+#f.write(x)
+#f.close()
 
-    product_url = config.get("product_url")
-    target_price = config.get("target_price")
+#Printo il titolo
+new_prices.write("OGGETTO: ")
+title = soup.select('meta[name="title"]')
+if PRINT_DEBUG == True:
+    print(title[0].attrs["content"]) #FUNZIONA, RIESCO A PRINTARE IL TITOLO 
+new_prices.write(title[0].attrs["content"])
+new_prices.write("\nPrezzo: ")
+prezzo_dec = soup.find("span", class_="a-price-whole") #Trova i decimali
+prezzo_fraz = soup.find("span", class_="a-price-fraction")
+print(prezzo_dec.text)
+print(prezzo_fraz.text)
+new_prices.write(prezzo_dec.text)
+new_prices.write(prezzo_fraz.text)
+#Fino a qua funziona, scrive l'oggetto ed il prezzo, ora devo fare in modo che peschi il link da un txt e basta mettere un for, per poi fare un confronto
 
-    if not product_url or not target_price:
-        print("❌ Configurazione non valida. Verifica il file config.json.")
-        return
 
-    print("🔍 Controllo prezzo per:")
-    print(product_url)
-
-    current_price = get_price(product_url)
-
-    if current_price is None:
-        print("❌ Prezzo non disponibile.")
-    else:
-        print(f"💰 Prezzo attuale: {current_price:.2f} €")
-        print(f"🎯 Prezzo target:  {target_price:.2f} €")
-
-        if current_price <= target_price:
-            print("✅ Prezzo sotto soglia! Puoi acquistare! 🎉")
-            # Qui collegheremo la notifica
-        else:
-            print("📉 Prezzo ancora troppo alto.")
-
-if __name__ == "__main__":
-    main()
