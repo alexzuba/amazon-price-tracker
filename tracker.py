@@ -10,7 +10,8 @@ import os
 #Possibili miglioramenti: usare un json come file di configurazione anziché un txt 
 
 #Devo mettere un for iniziale che cicla per ogni riga di un txt, che sarà il txt in cui metto i link che voglio tracciare. Prima devo riuscire ad accedere al nome dell'oggetto + il prezzo, e poi man mano li appendo in un file di testo
-PRINT_DEBUG = True
+PRINT_DEBUG = False
+SEND_EMAIL_DEBUG = True
 
 custom_headers = { #Header per evitare captcha
     "Accept-language": "en-GB,en;q=0.9",
@@ -118,46 +119,47 @@ old_prices.close()
 new_prices.close()
 
 #Mando email
-try:
-    SECRET_EMAIL_RECEIVER_1 = os.environ["SECRET_EMAIL_RECEIVER_1"]
-except KeyError:
-    SECRET_EMAIL_RECEIVER_1 = "Token not available"
-    print("Token not available")
-try:
-    SECRET_EMAIL_RECEIVER_2 = os.environ["SECRET_EMAIL_RECEIVER_2"]
-except KeyError:
-    SECRET_EMAIL_RECEIVER_2 = "Token not available"
-    print("Token not available")
-try:
-    SECRET_EMAIL_SENDER = os.environ["SECRET_EMAIL_SENDER"]
-except KeyError:
-    SECRET_EMAIL_SENDER = "Token not available"
-    print("Token not available")
-GMAIL_USERNAME = SECRET_EMAIL_SENDER
-try:
-    SECRET_EMAIL_SENDER_PW = os.environ["SECRET_EMAIL_SENDER_PW"]
-except KeyError:
-    SECRET_EMAIL_SENDER_PW = "Token not available"
-    print("Token not available")
-GMAIL_APP_PASSWORD = SECRET_EMAIL_SENDER_PW
+if SEND_EMAIL_DEBUG == True:
+    try:
+        SECRET_EMAIL_RECEIVER_1 = os.environ["SECRET_EMAIL_RECEIVER_1"]
+    except KeyError:
+        SECRET_EMAIL_RECEIVER_1 = "Token not available"
+        print("Token not available")
+    try:
+        SECRET_EMAIL_RECEIVER_2 = os.environ["SECRET_EMAIL_RECEIVER_2"]
+    except KeyError:
+        SECRET_EMAIL_RECEIVER_2 = "Token not available"
+        print("Token not available")
+    try:
+        SECRET_EMAIL_SENDER = os.environ["SECRET_EMAIL_SENDER"]
+    except KeyError:
+        SECRET_EMAIL_SENDER = "Token not available"
+        print("Token not available")
+    GMAIL_USERNAME = SECRET_EMAIL_SENDER
+    try:
+        SECRET_EMAIL_SENDER_PW = os.environ["SECRET_EMAIL_SENDER_PW"]
+    except KeyError:
+        SECRET_EMAIL_SENDER_PW = "Token not available"
+        print("Token not available")
+    GMAIL_APP_PASSWORD = SECRET_EMAIL_SENDER_PW
 
-if update == 1: #Invio mail con il contenuto degli oggetti cambiati di prezzo
-    changed_prices_path = 'changed_prices.txt'
+    if update == 1: #Invio mail con il contenuto degli oggetti cambiati di prezzo
+        changed_prices_path = 'changed_prices.txt'
 
-    with open(changed_prices_path, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-        file_content = ''.join(lines)
+        with open(changed_prices_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            file_content = ''.join(lines)
 
-    if PRINT_DEBUG == True:
-        print(file_content)
+        if PRINT_DEBUG == True:
+            print(file_content)
 
-    if SEND_EMAIL == True:
-        recipients = [SECRET_EMAIL_RECEIVER_1, SECRET_EMAIL_RECEIVER_2]
-        msg = MIMEText(file_content)
-        msg["Subject"] = "Prezzo degli articoli monitorati su amazon cambiato!!"
-        msg["To"] = ", ".join(recipients)
-        msg["From"] = f"{GMAIL_USERNAME}@gmail.com"
-        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        smtp_server.login(GMAIL_USERNAME, GMAIL_APP_PASSWORD)
-        smtp_server.sendmail(msg["From"], recipients, msg.as_string())
-        smtp_server.quit()
+        if SEND_EMAIL == True:
+            recipients = [SECRET_EMAIL_RECEIVER_1, SECRET_EMAIL_RECEIVER_2]
+            msg = MIMEText(file_content)
+            msg["Subject"] = "Prezzo degli articoli monitorati su amazon cambiato!!"
+            msg["To"] = ", ".join(recipients)
+            msg["From"] = f"{GMAIL_USERNAME}@gmail.com"
+            smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            smtp_server.login(GMAIL_USERNAME, GMAIL_APP_PASSWORD)
+            smtp_server.sendmail(msg["From"], recipients, msg.as_string())
+            smtp_server.quit()
