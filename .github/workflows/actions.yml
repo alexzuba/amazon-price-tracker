@@ -31,14 +31,14 @@ jobs:
                     python -m pip install --upgrade pip
                     pip install -r requirements.txt
             
-            - name: execute py script #run amazon-price-tracker.py
+            - name: execute py script #run tracker.py
               env:
                     #SOME_SECRET: ${{secrets.SOME_SECRET}}
                     SECRET_EMAIL_RECEIVER_1: ${{secrets.SECRET_EMAIL_RECEIVER_1}}
                     SECRET_EMAIL_RECEIVER_2: ${{secrets.SECRET_EMAIL_RECEIVER_2}}
                     SECRET_EMAIL_SENDER: ${{secrets.SECRET_EMAIL_SENDER}}
                     SECRET_EMAIL_SENDER_PW: ${{secrets.SECRET_EMAIL_SENDER_PW}}
-              run: python amazon-price-tracker.py
+              run: python tracker.py
 
             - name: commit files
               run: |
