@@ -10,8 +10,8 @@ import os
 #Possibili miglioramenti: usare un json come file di configurazione anziché un txt 
 
 #Devo mettere un for iniziale che cicla per ogni riga di un txt, che sarà il txt in cui metto i link che voglio tracciare. Prima devo riuscire ad accedere al nome dell'oggetto + il prezzo, e poi man mano li appendo in un file di testo
-PRINT_DEBUG = False
-SEND_EMAIL_DEBUG = True
+PRINT_DEBUG = True
+SEND_EMAIL_DEBUG = False
 
 custom_headers = { #Header per evitare captcha
     "Accept-language": "en-GB,en;q=0.9",
@@ -32,10 +32,9 @@ lines = product_list.readlines()
 i = 0
 for line in lines:
     URL = line
-    #print(i)
     i = i + 1
-    print(URL)
-    #page = requests.get(URL)
+    if PRINT_DEBUG == True:
+        print(URL)
     page = requests.get(URL, headers=custom_headers)
     soup = BeautifulSoup(page.content, "html.parser")
     results = soup.find(id="content") #Funziona, ottengo la parte delle pizze
@@ -56,8 +55,9 @@ for line in lines:
     new_prices.write("\nPrezzo: ")
     prezzo_dec = soup.find("span", class_="a-price-whole") #Trova i decimali
     prezzo_fraz = soup.find("span", class_="a-price-fraction")
-    print(prezzo_dec.text)
-    print(prezzo_fraz.text)
+    if PRINT_DEBUG == True:
+        print(prezzo_dec.text)
+        print(prezzo_fraz.text)
     new_prices.write(prezzo_dec.text)
     new_prices.write(prezzo_fraz.text)
     new_prices.write('\n')
